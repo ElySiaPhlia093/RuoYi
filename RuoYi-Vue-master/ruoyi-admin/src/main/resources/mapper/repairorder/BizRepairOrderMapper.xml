@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.repairorder.mapper.BizRepairOrderMapper">
+    
+    <resultMap type="BizRepairOrder" id="BizRepairOrderResult">
+        <result property="orderId"    column="order_id"    />
+        <result property="orderNo"    column="order_no"    />
+        <result property="deviceId"    column="device_id"    />
+        <result property="faultType"    column="fault_type"    />
+        <result property="faultDesc"    column="fault_desc"    />
+        <result property="reportUserId"    column="report_user_id"    />
+        <result property="reportTime"    column="report_time"    />
+        <result property="status"    column="status"    />
+        <result property="handlerUserId"    column="handler_user_id"    />
+        <result property="handleTime"    column="handle_time"    />
+        <result property="handleResult"    column="handle_result"    />
+        <result property="finishTime"    column="finish_time"    />
+        <result property="remark"    column="remark"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="deviceCode"    column="device_code"    />
+        <result property="deviceName"    column="device_name"    />
+        <result property="location"      column="location"       />
+        <result property="reportUserName" column="report_user_name" />
+        <result property="handlerName"   column="handler_name"   />
+    </resultMap>
+
+    <!-- 关联设备台账，带出设备编号/设备名称/安装位置；再关联 sys_user 带出报修人/处理人姓名 -->
+    <!-- 表别名 o=报修工单 d=设备 ru=报修人 hu=处理人，where 里必须带前缀否则 status、del_flag 等列名冲突 -->
+    <sql id="selectBizRepairOrderVo">
+        select o.order_id, o.order_no, o.device_id, o.fault_type, o.fault_desc, o.report_user_id, o.report_time, o.status,
+               o.handler_user_id, o.handle_time, o.handle_result, o.finish_time, o.remark, o.del_flag, o.create_by, o.create_time,
+               o.update_by, o.update_time, d.device_code, d.device_name, d.location,
+               ru.nick_name as report_user_name, hu.nick_name as handler_name
+        from biz_repair_order o
+        left join biz_device d on o.device_id = d.device_id
+        left join sys_user ru on o.report_user_id = ru.user_id
+        left join sys_user hu on o.handler_user_id = hu.user_id
+    </sql>
+
+    <select id="selectBizRepairOrderList" parameterType="BizRepairOrder" resultMap="BizRepairOrderResult">
+        <include refid="selectBizRepairOrderVo"/>
+        <where>  
+            <if test="orderNo != null  and orderNo != ''"> and o.order_no = #{orderNo}</if>
+            <if test="deviceId != null "> and o.device_id = #{deviceId}</if>
+            <if test="faultType != null  and faultType != ''"> and o.fault_type = #{faultType}</if>
+            <if test="faultDesc != null  and faultDesc != ''"> and o.fault_desc = #{faultDesc}</if>
+            <if test="reportUserId != null "> and o.report_user_id = #{reportUserId}</if>
+            <if test="reportTime != null "> and o.report_time = #{reportTime}</if>
+            <if test="status != null  and status != ''"> and o.status = #{status}</if>
+            <if test="handlerUserId != null "> and o.handler_user_id = #{handlerUserId}</if>
+            <if test="handleTime != null "> and o.handle_time = #{handleTime}</if>
+            <if test="handleResult != null  and handleResult != ''"> and o.handle_result = #{handleResult}</if>
+            <if test="finishTime != null "> and o.finish_time = #{finishTime}</if>
+            <if test="deviceCode != null  and deviceCode != ''"> and d.device_code like concat('%', #{deviceCode}, '%')</if>
+            <if test="deviceName != null  and deviceName != ''"> and d.device_name like concat('%', #{deviceName}, '%')</if>
+        </where>
+        order by o.report_time desc
+    </select>
+    
+    <select id="selectBizRepairOrderByOrderId" parameterType="Long" resultMap="BizRepairOrderResult">
+        <include refid="selectBizRepairOrderVo"/>
+        where o.order_id = #{orderId}
+    </select>
+
+    <insert id="insertBizRepairOrder" parameterType="BizRepairOrder" useGeneratedKeys="true" keyProperty="orderId">
+        insert into biz_repair_order
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">order_no,</if>
+            <if test="deviceId != null">device_id,</if>
+            <if test="faultType != null">fault_type,</if>
+            <if test="faultDesc != null and faultDesc != ''">fault_desc,</if>
+            <if test="reportUserId != null">report_user_id,</if>
+            <if test="reportTime != null">report_time,</if>
+            <if test="status != null">status,</if>
+            <if test="handlerUserId != null">handler_user_id,</if>
+            <if test="handleTime != null">handle_time,</if>
+            <if test="handleResult != null">handle_result,</if>
+            <if test="finishTime != null">finish_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">#{orderNo},</if>
+            <if test="deviceId != null">#{deviceId},</if>
+            <if test="faultType != null">#{faultType},</if>
+            <if test="faultDesc != null and faultDesc != ''">#{faultDesc},</if>
+            <if test="reportUserId != null">#{reportUserId},</if>
+            <if test="reportTime != null">#{reportTime},</if>
+            <if test="status != null">#{status},</if>
+            <if test="handlerUserId != null">#{handlerUserId},</if>
+            <if test="handleTime != null">#{handleTime},</if>
+            <if test="handleResult != null">#{handleResult},</if>
+            <if test="finishTime != null">#{finishTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateBizRepairOrder" parameterType="BizRepairOrder">
+        update biz_repair_order
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">order_no = #{orderNo},</if>
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="faultType != null">fault_type = #{faultType},</if>
+            <if test="faultDesc != null and faultDesc != ''">fault_desc = #{faultDesc},</if>
+            <if test="reportUserId != null">report_user_id = #{reportUserId},</if>
+            <if test="reportTime != null">report_time = #{reportTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="handlerUserId != null">handler_user_id = #{handlerUserId},</if>
+            <if test="handleTime != null">handle_time = #{handleTime},</if>
+            <if test="handleResult != null">handle_result = #{handleResult},</if>
+            <if test="finishTime != null">finish_time = #{finishTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where order_id = #{orderId}
+    </update>
+
+    <delete id="deleteBizRepairOrderByOrderId" parameterType="Long">
+        delete from biz_repair_order where order_id = #{orderId}
+    </delete>
+
+    <delete id="deleteBizRepairOrderByOrderIds" parameterType="String">
+        delete from biz_repair_order where order_id in 
+        <foreach item="orderId" collection="array" open="(" separator="," close=")">
+            #{orderId}
+        </foreach>
+    </delete>
+</mapper>

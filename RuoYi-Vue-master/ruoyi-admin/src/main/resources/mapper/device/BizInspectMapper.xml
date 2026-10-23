@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.device.mapper.BizInspectMapper">
+
+    <resultMap type="BizInspect" id="BizInspectResult">
+        <result property="inspectId"      column="inspect_id"      />
+        <result property="inspectNo"      column="inspect_no"      />
+        <result property="deviceId"       column="device_id"       />
+        <result property="inspectUserId"  column="inspect_user_id" />
+        <result property="inspectType"    column="inspect_type"    />
+        <result property="inspectTime"    column="inspect_time"    />
+        <result property="checkItems"     column="check_items"     />
+        <result property="result"         column="result"          />
+        <result property="problemDesc"    column="problem_desc"    />
+        <result property="orderId"        column="order_id"        />
+        <result property="remark"         column="remark"          />
+        <result property="delFlag"        column="del_flag"        />
+        <result property="createBy"       column="create_by"       />
+        <result property="createTime"     column="create_time"     />
+        <result property="updateBy"       column="update_by"       />
+        <result property="updateTime"     column="update_time"     />
+        <result property="deviceCode"     column="device_code"     />
+        <result property="deviceName"     column="device_name"     />
+        <result property="location"       column="location"        />
+        <result property="inspectUserName" column="inspect_user_name" />
+        <result property="orderNo"        column="order_no"        />
+    </resultMap>
+
+    <sql id="selectBizInspectVo">
+        select i.inspect_id, i.inspect_no, i.device_id, i.inspect_user_id, i.inspect_type,
+               i.inspect_time, i.check_items, i.result, i.problem_desc, i.order_id, i.remark,
+               i.del_flag, i.create_by, i.create_time, i.update_by, i.update_time,
+               d.device_code, d.device_name, d.location,
+               u.nick_name as inspect_user_name, o.order_no
+        from biz_inspect i
+        left join biz_device d on i.device_id = d.device_id
+        left join sys_user u on i.inspect_user_id = u.user_id
+        left join biz_repair_order o on i.order_id = o.order_id
+    </sql>
+
+    <select id="selectBizInspectList" parameterType="BizInspect" resultMap="BizInspectResult">
+        <include refid="selectBizInspectVo"/>
+        <where>
+            i.del_flag = '0'
+            <if test="inspectNo != null and inspectNo != ''"> and i.inspect_no like concat('%', #{inspectNo}, '%')</if>
+            <if test="deviceId != null "> and i.device_id = #{deviceId}</if>
+            <if test="inspectUserId != null "> and i.inspect_user_id = #{inspectUserId}</if>
+            <if test="inspectType != null and inspectType != ''"> and i.inspect_type = #{inspectType}</if>
+            <if test="result != null and result != ''"> and i.result = #{result}</if>
+            <if test="checkItems != null and checkItems != ''"> and i.check_items like concat('%', #{checkItems}, '%')</if>
+            <if test="params.beginTime != null and params.beginTime != ''"> and i.inspect_time &gt;= #{params.beginTime}</if>
+            <if test="params.endTime != null and params.endTime != ''"> and i.inspect_time &lt;= #{params.endTime}</if>
+        </where>
+        order by i.inspect_time desc
+    </select>
+
+    <select id="selectBizInspectByInspectId" parameterType="Long" resultMap="BizInspectResult">
+        <include refid="selectBizInspectVo"/>
+        where i.inspect_id = #{inspectId}
+    </select>
+
+    <insert id="insertBizInspect" parameterType="BizInspect" useGeneratedKeys="true" keyProperty="inspectId">
+        insert into biz_inspect
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="inspectNo != null and inspectNo != ''">inspect_no,</if>
+            <if test="deviceId != null">device_id,</if>
+            <if test="inspectUserId != null">inspect_user_id,</if>
+            <if test="inspectType != null">inspect_type,</if>
+            <if test="inspectTime != null">inspect_time,</if>
+            <if test="checkItems != null">check_items,</if>
+            <if test="result != null">result,</if>
+            <if test="problemDesc != null">problem_desc,</if>
+            <if test="orderId != null">order_id,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="inspectNo != null and inspectNo != ''">#{inspectNo},</if>
+            <if test="deviceId != null">#{deviceId},</if>
+            <if test="inspectUserId != null">#{inspectUserId},</if>
+            <if test="inspectType != null">#{inspectType},</if>
+            <if test="inspectTime != null">#{inspectTime},</if>
+            <if test="checkItems != null">#{checkItems},</if>
+            <if test="result != null">#{result},</if>
+            <if test="problemDesc != null">#{problemDesc},</if>
+            <if test="orderId != null">#{orderId},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateBizInspect" parameterType="BizInspect">
+        update biz_inspect
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="inspectNo != null and inspectNo != ''">inspect_no = #{inspectNo},</if>
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="inspectUserId != null">inspect_user_id = #{inspectUserId},</if>
+            <if test="inspectType != null">inspect_type = #{inspectType},</if>
+            <if test="inspectTime != null">inspect_time = #{inspectTime},</if>
+            <if test="checkItems != null">check_items = #{checkItems},</if>
+            <if test="result != null">result = #{result},</if>
+            <if test="problemDesc != null">problem_desc = #{problemDesc},</if>
+            <if test="orderId != null">order_id = #{orderId},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where inspect_id = #{inspectId}
+    </update>
+
+    <delete id="deleteBizInspectByInspectId" parameterType="Long">
+        delete from biz_inspect where inspect_id = #{inspectId}
+    </delete>
+
+    <delete id="deleteBizInspectByInspectIds" parameterType="String">
+        delete from biz_inspect where inspect_id in
+        <foreach item="inspectId" collection="array" open="(" separator="," close=")">
+            #{inspectId}
+        </foreach>
+    </delete>
+</mapper>

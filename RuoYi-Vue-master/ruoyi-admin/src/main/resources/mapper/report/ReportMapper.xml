@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.report.mapper.ReportMapper">
+
+    <!-- 概览指标 -->
+    <select id="selectSummary" resultType="java.util.LinkedHashMap">
+        select
+          (select count(*) from biz_device where del_flag = '0')                                      as deviceTotal,
+          (select count(*) from biz_device where del_flag = '0' and status = 'running')               as runningCount,
+          (select count(*) from biz_device where del_flag = '0' and status = 'repairing')             as repairingCount,
+          (select count(*) from biz_device where del_flag = '0' and status = 'stopped')               as stoppedCount,
+          (select count(*) from biz_repair_order where del_flag = '0')                                as orderTotal,
+          (select count(*) from biz_repair_order where del_flag = '0' and status = '0')               as pendingCount,
+          (select count(*) from biz_repair_order where del_flag = '0' and status = '1')               as processingCount,
+          (select count(*) from biz_repair_order where del_flag = '0' and status = '2')               as finishedCount,
+          (select ifnull(round(sum(cost)), 0) from biz_repair_record where del_flag = '0'
+             and record_time &gt;= date_sub(curdate(), interval 30 day))                                as monthCost,
+          (select ifnull(round(sum(cost)), 0) from biz_repair_record where del_flag = '0')            as totalCost,
+          (select ifnull(round(100 * sum(result = 'normal') / count(*), 1), 0)
+             from biz_inspect where del_flag = '0')                                                   as inspectPassRate,
+          (select count(*) from biz_part where del_flag = '0' and stock &lt;= safety_stock)             as partWarning,
+          (select count(*) from biz_inspect where del_flag = '0' and date(inspect_time) = curdate())  as inspectToday
+    </select>
+
+    <!-- 设备状态分布（字典翻译） -->
+    <select id="selectDeviceStatusCount" resultType="java.util.LinkedHashMap">
+        select ifnull(d.dict_label, v.status) as name, count(*) as value
+        from biz_device v
+        left join sys_dict_data d on d.dict_type = 'device_status' and d.dict_value = v.status
+        where v.del_flag = '0'
+        group by ifnull(d.dict_label, v.status)
+        order by value desc
+    </select>
+
+    <!-- 设备类型分布 -->
+    <select id="selectDeviceTypeCount" resultType="java.util.LinkedHashMap">
+        select ifnull(d.dict_label, v.device_type) as name, count(*) as value
+        from biz_device v
+        left join sys_dict_data d on d.dict_type = 'device_type' and d.dict_value = v.device_type
+        where v.del_flag = '0'
+        group by ifnull(d.dict_label, v.device_type)
+        order by value desc
+    </select>
+
+    <!-- 近 N 天报修趋势（补齐空白日期） -->
+    <select id="selectOrderTrend" resultType="java.util.LinkedHashMap">
+        with recursive seq as (
+            select date_sub(curdate(), interval #{days} day) as dt
+            union all
+            select date_add(dt, interval 1 day) from seq where dt &lt; curdate()
+        )
+        select date_format(s.dt, '%m-%d') as name,
+               (select count(*) from biz_repair_order o
+                 where o.del_flag = '0' and date(o.report_time) = s.dt) as value
+        from seq s
+        order by s.dt
+    </select>
+
+    <!-- 故障类型分布 -->
+    <select id="selectFaultTypeCount" resultType="java.util.LinkedHashMap">
+        select ifnull(d.dict_label, o.fault_type) as name, count(*) as value
+        from biz_repair_order o
+        left join sys_dict_data d on d.dict_type = 'fault_type' and d.dict_value = o.fault_type
+        where o.del_flag = '0'
+        group by ifnull(d.dict_label, o.fault_type)
+        order by value desc
+    </select>
+
+    <!-- 维修费用 TOP N -->
+    <select id="selectCostTop" resultType="java.util.LinkedHashMap">
+        select v.device_name as name, round(sum(r.cost)) as value
+        from biz_repair_record r
+        join biz_device v on v.device_id = r.device_id
+        where r.del_flag = '0'
+        group by v.device_id, v.device_name
+        order by value desc
+        limit #{limit}
+    </select>
+
+    <!-- 近 N 天巡检趋势 -->
+    <select id="selectInspectTrend" resultType="java.util.LinkedHashMap">
+        with recursive seq as (
+            select date_sub(curdate(), interval #{days} day) as dt
+            union all
+            select date_add(dt, interval 1 day) from seq where dt &lt; curdate()
+        )
+        select date_format(s.dt, '%m-%d') as name,
+               sum(case when i.result = 'normal' then 1 else 0 end) as normal,
+               sum(case when i.result = 'abnormal' then 1 else 0 end) as abnormal
+        from seq s
+        left join biz_inspect i on date(i.inspect_time) = s.dt and i.del_flag = '0'
+        group by s.dt
+        order by s.dt
+    </select>
+</mapper>

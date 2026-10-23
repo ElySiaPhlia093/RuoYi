@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.repairorder.mapper.BizRepairRecordMapper">
+
+    <resultMap type="BizRepairRecord" id="BizRepairRecordResult">
+        <result property="recordId"      column="record_id"      />
+        <result property="orderId"       column="order_id"       />
+        <result property="deviceId"      column="device_id"      />
+        <result property="handlerUserId" column="handler_user_id" />
+        <result property="repairType"    column="repair_type"    />
+        <result property="faultCause"    column="fault_cause"    />
+        <result property="handleDesc"    column="handle_desc"    />
+        <result property="partId"        column="part_id"        />
+        <result property="partQty"       column="part_qty"       />
+        <result property="cost"          column="cost"           />
+        <result property="durationMin"   column="duration_min"   />
+        <result property="result"        column="result"         />
+        <result property="recordTime"    column="record_time"    />
+        <result property="remark"        column="remark"         />
+        <result property="delFlag"       column="del_flag"       />
+        <result property="createBy"      column="create_by"      />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"      column="update_by"      />
+        <result property="updateTime"    column="update_time"    />
+        <result property="orderNo"       column="order_no"       />
+        <result property="deviceCode"    column="device_code"    />
+        <result property="deviceName"    column="device_name"    />
+        <result property="handlerName"   column="handler_name"   />
+        <result property="partName"      column="part_name"      />
+    </resultMap>
+
+    <sql id="selectBizRepairRecordVo">
+        select r.record_id, r.order_id, r.device_id, r.handler_user_id, r.repair_type,
+               r.fault_cause, r.handle_desc, r.part_id, r.part_qty, r.cost, r.duration_min,
+               r.result, r.record_time, r.remark, r.del_flag, r.create_by, r.create_time,
+               r.update_by, r.update_time,
+               o.order_no, d.device_code, d.device_name,
+               u.nick_name as handler_name, p.part_name
+        from biz_repair_record r
+        left join biz_repair_order o on r.order_id = o.order_id
+        left join biz_device d on r.device_id = d.device_id
+        left join sys_user u on r.handler_user_id = u.user_id
+        left join biz_part p on r.part_id = p.part_id
+    </sql>
+
+    <select id="selectBizRepairRecordList" parameterType="BizRepairRecord" resultMap="BizRepairRecordResult">
+        <include refid="selectBizRepairRecordVo"/>
+        <where>
+            r.del_flag = '0'
+            <if test="orderId != null "> and r.order_id = #{orderId}</if>
+            <if test="deviceId != null "> and r.device_id = #{deviceId}</if>
+            <if test="handlerUserId != null "> and r.handler_user_id = #{handlerUserId}</if>
+            <if test="repairType != null and repairType != ''"> and r.repair_type = #{repairType}</if>
+            <if test="result != null and result != ''"> and r.result = #{result}</if>
+            <if test="partId != null "> and r.part_id = #{partId}</if>
+            <if test="orderNo != null and orderNo != ''"> and o.order_no like concat('%', #{orderNo}, '%')</if>
+            <if test="params.beginTime != null and params.beginTime != ''"> and r.record_time &gt;= #{params.beginTime}</if>
+            <if test="params.endTime != null and params.endTime != ''"> and r.record_time &lt;= #{params.endTime}</if>
+        </where>
+        order by r.record_time desc
+    </select>
+
+    <select id="selectBizRepairRecordByRecordId" parameterType="Long" resultMap="BizRepairRecordResult">
+        <include refid="selectBizRepairRecordVo"/>
+        where r.record_id = #{recordId}
+    </select>
+
+    <insert id="insertBizRepairRecord" parameterType="BizRepairRecord" useGeneratedKeys="true" keyProperty="recordId">
+        insert into biz_repair_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="orderId != null">order_id,</if>
+            <if test="deviceId != null">device_id,</if>
+            <if test="handlerUserId != null">handler_user_id,</if>
+            <if test="repairType != null">repair_type,</if>
+            <if test="faultCause != null">fault_cause,</if>
+            <if test="handleDesc != null">handle_desc,</if>
+            <if test="partId != null">part_id,</if>
+            <if test="partQty != null">part_qty,</if>
+            <if test="cost != null">cost,</if>
+            <if test="durationMin != null">duration_min,</if>
+            <if test="result != null">result,</if>
+            <if test="recordTime != null">record_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="orderId != null">#{orderId},</if>
+            <if test="deviceId != null">#{deviceId},</if>
+            <if test="handlerUserId != null">#{handlerUserId},</if>
+            <if test="repairType != null">#{repairType},</if>
+            <if test="faultCause != null">#{faultCause},</if>
+            <if test="handleDesc != null">#{handleDesc},</if>
+            <if test="partId != null">#{partId},</if>
+            <if test="partQty != null">#{partQty},</if>
+            <if test="cost != null">#{cost},</if>
+            <if test="durationMin != null">#{durationMin},</if>
+            <if test="result != null">#{result},</if>
+            <if test="recordTime != null">#{recordTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateBizRepairRecord" parameterType="BizRepairRecord">
+        update biz_repair_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="orderId != null">order_id = #{orderId},</if>
+            <if test="deviceId != null">device_id = #{deviceId},</if>
+            <if test="handlerUserId != null">handler_user_id = #{handlerUserId},</if>
+            <if test="repairType != null">repair_type = #{repairType},</if>
+            <if test="faultCause != null">fault_cause = #{faultCause},</if>
+            <if test="handleDesc != null">handle_desc = #{handleDesc},</if>
+            <if test="partId != null">part_id = #{partId},</if>
+            <if test="partQty != null">part_qty = #{partQty},</if>
+            <if test="cost != null">cost = #{cost},</if>
+            <if test="durationMin != null">duration_min = #{durationMin},</if>
+            <if test="result != null">result = #{result},</if>
+            <if test="recordTime != null">record_time = #{recordTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where record_id = #{recordId}
+    </update>
+
+    <delete id="deleteBizRepairRecordByRecordId" parameterType="Long">
+        delete from biz_repair_record where record_id = #{recordId}
+    </delete>
+
+    <delete id="deleteBizRepairRecordByRecordIds" parameterType="String">
+        delete from biz_repair_record where record_id in
+        <foreach item="recordId" collection="array" open="(" separator="," close=")">
+            #{recordId}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.device.mapper.BizPartMapper">
+
+    <resultMap type="BizPart" id="BizPartResult">
+        <result property="partId"      column="part_id"      />
+        <result property="partCode"    column="part_code"    />
+        <result property="partName"    column="part_name"    />
+        <result property="spec"        column="spec"         />
+        <result property="unit"        column="unit"         />
+        <result property="stock"       column="stock"        />
+        <result property="safetyStock" column="safety_stock" />
+        <result property="unitPrice"   column="unit_price"   />
+        <result property="supplier"    column="supplier"     />
+        <result property="status"      column="status"       />
+        <result property="remark"      column="remark"       />
+        <result property="delFlag"     column="del_flag"     />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"  column="create_time"  />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"  column="update_time"  />
+    </resultMap>
+
+    <sql id="selectBizPartVo">
+        select part_id, part_code, part_name, spec, unit, stock, safety_stock, unit_price,
+               supplier, status, remark, del_flag, create_by, create_time, update_by, update_time
+        from biz_part
+    </sql>
+
+    <select id="selectBizPartList" parameterType="BizPart" resultMap="BizPartResult">
+        <include refid="selectBizPartVo"/>
+        <where>
+            del_flag = '0'
+            <if test="partCode != null and partCode != ''"> and part_code like concat('%', #{partCode}, '%')</if>
+            <if test="partName != null and partName != ''"> and part_name like concat('%', #{partName}, '%')</if>
+            <if test="spec != null and spec != ''"> and spec like concat('%', #{spec}, '%')</if>
+            <if test="supplier != null and supplier != ''"> and supplier like concat('%', #{supplier}, '%')</if>
+            <if test="status != null and status != ''"> and status = #{status}</if>
+        </where>
+        order by part_code
+    </select>
+
+    <select id="selectBizPartByPartId" parameterType="Long" resultMap="BizPartResult">
+        <include refid="selectBizPartVo"/>
+        where part_id = #{partId}
+    </select>
+
+    <insert id="insertBizPart" parameterType="BizPart" useGeneratedKeys="true" keyProperty="partId">
+        insert into biz_part
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="partCode != null and partCode != ''">part_code,</if>
+            <if test="partName != null and partName != ''">part_name,</if>
+            <if test="spec != null">spec,</if>
+            <if test="unit != null">unit,</if>
+            <if test="stock != null">stock,</if>
+            <if test="safetyStock != null">safety_stock,</if>
+            <if test="unitPrice != null">unit_price,</if>
+            <if test="supplier != null">supplier,</if>
+            <if test="status != null">status,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="partCode != null and partCode != ''">#{partCode},</if>
+            <if test="partName != null and partName != ''">#{partName},</if>
+            <if test="spec != null">#{spec},</if>
+            <if test="unit != null">#{unit},</if>
+            <if test="stock != null">#{stock},</if>
+            <if test="safetyStock != null">#{safetyStock},</if>
+            <if test="unitPrice != null">#{unitPrice},</if>
+            <if test="supplier != null">#{supplier},</if>
+            <if test="status != null">#{status},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateBizPart" parameterType="BizPart">
+        update biz_part
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="partCode != null and partCode != ''">part_code = #{partCode},</if>
+            <if test="partName != null and partName != ''">part_name = #{partName},</if>
+            <if test="spec != null">spec = #{spec},</if>
+            <if test="unit != null">unit = #{unit},</if>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="safetyStock != null">safety_stock = #{safetyStock},</if>
+            <if test="unitPrice != null">unit_price = #{unitPrice},</if>
+            <if test="supplier != null">supplier = #{supplier},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where part_id = #{partId}
+    </update>
+
+    <delete id="deleteBizPartByPartId" parameterType="Long">
+        delete from biz_part where part_id = #{partId}
+    </delete>
+
+    <delete id="deleteBizPartByPartIds" parameterType="String">
+        delete from biz_part where part_id in
+        <foreach item="partId" collection="array" open="(" separator="," close=")">
+            #{partId}
+        </foreach>
+    </delete>
+
+    <update id="deductStock">
+        update biz_part set stock = greatest(stock - #{qty}, 0) where part_id = #{partId}
+    </update>
+</mapper>
